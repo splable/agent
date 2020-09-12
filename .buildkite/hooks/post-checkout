@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CI_SCRIPTS_TEST_CLONE_BRANCH="master" # Can be branch name or SHA.
+CI_SCRIPTS_TEST_REPO_NAME="ci-scripts"
+CI_SCRIPTS_TEST_CLONE_LOCATION="ci-scripts"
+
+echo "--- :books: Cloning ${CI_SCRIPTS_TEST_REPO_NAME}"
+
+git clone "git@github.com:splable/${CI_SCRIPTS_TEST_REPO_NAME}.git" "${CI_SCRIPTS_TEST_CLONE_LOCATION}"
+cd "${CI_SCRIPTS_TEST_CLONE_LOCATION}"
+git checkout "${CI_SCRIPTS_TEST_CLONE_BRANCH}"
+cd -

@@ -1,0 +1,33 @@
+# ------------------------------------------------------------------------
+# Queues
+ciQueue: &ciQueue
+  queue: build
+
+# AWS assume role
+# ------------------------------------------------------------------------
+ap-southeast-2_id: &ap-southeast-2_id
+  AWS_ASSUME_ROLE_ACCOUNT_ALIAS: id
+  AWS_ASSUME_ROLE_ACCOUNT_ID: '824617887446'
+  AWS_ASSUME_ROLE_REGION: ap-southeast-2
+
+steps:
+  - label: ':prettier: Code format'
+    command:
+      - make -C .buildkite prettier
+    env: *ap-southeast-2_id
+    agents: *ciQueue
+
+  - label: ':go: Fmt'
+    command:
+      - make -C .buildkite fmt
+    env: *ap-southeast-2_id
+    agents: *ciQueue
+
+  - wait
+
+  - label: ':go: Build & Publish'
+    command:
+      - make -C .buildkite build
+      - ls -lah bin
+    env: *ap-southeast-2_id
+    agents: *ciQueue

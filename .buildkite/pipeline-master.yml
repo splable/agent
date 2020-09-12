@@ -1,0 +1,18 @@
+# ------------------------------------------------------------------------
+# Queues
+ciQueue: &ciQueue
+  queue: build
+
+# AWS assume role
+# ------------------------------------------------------------------------
+ap-southeast-2_id: &ap-southeast-2_id
+  AWS_ASSUME_ROLE_ACCOUNT_ALIAS: id
+  AWS_ASSUME_ROLE_ACCOUNT_ID: '824617887446'
+  AWS_ASSUME_ROLE_REGION: ap-southeast-2
+
+steps:
+  - label: ':go: Build & Publish'
+    command:
+      - make -C .buildkite build
+    env: *ap-southeast-2_id
+    agents: *ciQueue
