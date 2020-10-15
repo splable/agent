@@ -10,10 +10,12 @@ code:
 	code ~/workspace/config/vs-code/engineering.code-workspace
 
 install:
+	export CGO_ENABLED=0 && \
+	go install && \
 	go get
 
 run:
-	go run
+	go run .
 
 clean:
 	rm -rf bin/*
@@ -26,4 +28,4 @@ fmt:
 	go fmt
 
 scp:
-	scp bin/splable-agent-$(GIT_COMMIT_SHORT)-linux-arm7 pi@192.168.1.55:/home/pi/splable-agent
+	scp bin/splable-agent-$(GIT_COMMIT_SHORT)-linux-arm7 pi@192.168.1.60:/home/pi/splable-agent
