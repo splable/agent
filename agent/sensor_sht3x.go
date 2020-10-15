@@ -13,18 +13,24 @@ import (
 )
 
 // MeasureSHT3xRand gets the current temperature value from the SHT3x sensor.
-func MeasureSHT3xRand() float64 {
-	seed := rand.NewSource(time.Now().UnixNano())
-	rand := rand.New(seed)
-	min := 0.0
-	max := 30.0
-	temp := min + rand.Float64()*(max-min)
+func MeasureSHT3xRand() (float64, float64) {
+	tempSeed := rand.NewSource(time.Now().UnixNano())
+	tempRand := rand.New(tempSeed)
+	tempMin := 0.0
+	tempMax := 30.0
+	temp := tempMin + tempRand.Float64()*(tempMax-tempMin)
 
-	return temp
+	rhSeed := rand.NewSource(time.Now().UnixNano())
+	rhRand := rand.New(rhSeed)
+	rhMin := 40.0
+	rhMax := 80.0
+	rh := rhMin + rhRand.Float64()*(rhMax-rhMin)
+
+	return temp, rh
 }
 
-// MeasureSHT3x gets the current temperature value from the SHT3x sensor.
-func MeasureSHT3x() float64 {
+// MeasureSHT3x gets the current temperature and humidity values from the SHT3x sensor.
+func MeasureSHT3x() (float64, float64) {
 	// Create new connection to i2c-bus on 1 line with address 0x44.
 	// Use i2cdetect utility to find device address over the i2c-bus
 	// ls /dev/i2c* to find out bus line.
@@ -39,26 +45,34 @@ func MeasureSHT3x() float64 {
 
 	sensor := sht3x.NewSHT3X()
 
-	temp, _, err := sensor.ReadTemperatureAndRelativeHumidity(i2c, sht3x.RepeatabilityLow)
+	temp, rh, err := sensor.ReadTemperatureAndRelativeHumidity(i2c, sht3x.RepeatabilityLow)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return float64(temp)
+	return float64(temp), float64(rh)
 }
 
-// ReportSHT3x sends the current temperature value to the websocket channel.
-func (c *ChannelService) ReportSHT3x(environment string, channelName string) {
-	sensorValue := 0.0
+// ReportSHT3x generates sensor values based on environment. In dev, we just use random numbers
+// since access to actual sensors is not available.
+func (c *ChannelService) ReportSHT3x(environment string, tempChannelName string, humidityChannelName string) {
+	tempValue := 0.0
+	humidityValue := 0.0
 	if environment == "development" {
-		sensorValue = MeasureSHT3xRand()
+		tempValue, humidityValue = MeasureSHT3xRand()
 	} else {
-		sensorValue = MeasureSHT3x()
+		tempValue, humidityValue = MeasureSHT3x()
 	}
 
+	ReportValue(c, tempChannelName, tempValue)
+	ReportValue(c, humidityChannelName, humidityValue)
+}
+
+// ReportValue sends the current temperature and humidity values to websocket channels.
+func ReportValue(c *ChannelService, channelName string, value float64) {
 	content := channelContent{
 		Datetime: time.Now().UTC().String(),
-		Message:  fmt.Sprintf("%.2f", sensorValue),
+		Message:  fmt.Sprintf("%.2f", value),
 	}
 
 	identifier := channelIdentifier{

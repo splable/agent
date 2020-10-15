@@ -11,6 +11,8 @@ import (
 )
 
 const (
+	// HumidityChannel reports relative humidity values.
+	HumidityChannel = "HumidityChannel"
 	// LightChannel reports sensor lux values.
 	LightChannel = "LightChannel"
 	// TemperatureChannel reports sensor temperature values.
@@ -24,6 +26,7 @@ func main() {
 
 	// Subscribe to web socket channels.
 	agent := agent.NewSocket(conf)
+	agent.Channel.Subscribe(HumidityChannel)
 	agent.Channel.Subscribe(TemperatureChannel)
 	agent.Channel.Subscribe(LightChannel)
 
@@ -36,7 +39,7 @@ func main() {
 	for {
 		select {
 		case <-ticker.C:
-			agent.Channel.ReportSHT3x(conf.Environment, TemperatureChannel)
+			agent.Channel.ReportSHT3x(conf.Environment, TemperatureChannel, HumidityChannel)
 			agent.Channel.ReportTSL2591(conf.Environment, LightChannel)
 		case <-done:
 			return

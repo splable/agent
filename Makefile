@@ -15,6 +15,7 @@ install:
 	go get
 
 run:
+	export CGO_ENABLED=0 && \
 	go run .
 
 clean:
