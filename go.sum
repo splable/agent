@@ -4,6 +4,8 @@ github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc h1:HLRSIWzUGMLCq4ldt0W
 github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc/go.mod h1:AwxDPnsgIpy47jbGXZHA9Rv7pDkOJvQbezPuK1Y+nNk=
 github.com/d2r2/go-logger v0.0.0-20181221090742-9998a510495e h1:ZG3JBA6rPRl0xxQ+nNSfO7tor8w+CNCTs05DNJQYbLM=
 github.com/d2r2/go-logger v0.0.0-20181221090742-9998a510495e/go.mod h1:oA+9PUt8F1aKJ6o4YU1T120i7sgo1T6/1LWEEBy0BSs=
+github.com/d2r2/go-mpl3115a2 v0.0.0-20181113083421-817ad955eed0 h1:2WEeOwEhm5pdCdKqhzUgbLpazPlFOvaT3hxf737Xsb0=
+github.com/d2r2/go-mpl3115a2 v0.0.0-20181113083421-817ad955eed0/go.mod h1:EGhIUUCu3laYvWvlC4kTXCZH3vG7kcTmpcCbH6VDukM=
 github.com/d2r2/go-shell v0.0.0-20191113051817-7664ea33645f h1:VrZEIdW45kHrPChbu4fvZnolG9l9Wu70znnLQUY/yFg=
 github.com/d2r2/go-shell v0.0.0-20191113051817-7664ea33645f/go.mod h1:FdrNob+jQ3UkEpNVeZFVn8mW86Aa2wa6U5z0vGQOEXQ=
 github.com/d2r2/go-sht3x v0.0.0-20181222062132-074abc261905 h1:Dg6AjWosDuB0l1SzCzlCy8oSAmVNDytLZ5OgmROWGj0=

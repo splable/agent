@@ -17,6 +17,8 @@ const (
 	LightChannel = "LightChannel"
 	// TemperatureChannel reports sensor temperature values.
 	TemperatureChannel = "TemperatureChannel"
+	// PressureChannel reports sensor air pressure values.
+	PressureChannel = "PressureChannel"
 )
 
 func main() {
@@ -29,6 +31,7 @@ func main() {
 	agent.Channel.Subscribe(HumidityChannel)
 	agent.Channel.Subscribe(TemperatureChannel)
 	agent.Channel.Subscribe(LightChannel)
+	agent.Channel.Subscribe(PressureChannel)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
@@ -41,6 +44,7 @@ func main() {
 		case <-ticker.C:
 			agent.Channel.ReportSHT3x(conf.Environment, TemperatureChannel, HumidityChannel)
 			agent.Channel.ReportTSL2591(conf.Environment, LightChannel)
+			agent.Channel.ReportMPL3115A2(conf.Environment, PressureChannel)
 		case <-done:
 			return
 		case <-interrupt:
