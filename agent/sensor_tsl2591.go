@@ -3,11 +3,12 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
 	"github.com/jimnelson2/tsl2591"
+	"github.com/splable/agent/v1/conf"
+	"github.com/splable/agent/v1/logger"
 )
 
 // MeasureTSL2591Rand gets the current visible light value from the TSL2591 sensor.
@@ -22,31 +23,33 @@ func MeasureTSL2591Rand() float64 {
 }
 
 // MeasureTSL2591 gets the current visible light value from the TSL2591 sensor.
-func MeasureTSL2591() float64 {
+func MeasureTSL2591(l logger.Logger) float64 {
 	tsl, err := tsl2591.NewTSL2591(&tsl2591.Opts{
 		Gain:   tsl2591.GainMed,
 		Timing: tsl2591.Integrationtime100MS,
 	})
 	if err != nil {
-		log.Panic(err)
+		l.Error("Error connecting to the TSL2591 sensor using the I2C bus: %s", err)
 	}
 
 	lux, err := tsl.Lux()
 	if err != nil {
-		log.Panic(err)
+		l.Error("Error reading TSL2591 sensor value: %s", err)
 	}
 
 	return lux
 }
 
 // ReportTSL2591 sends the current visible light value to the websocket channel.
-func (c *ChannelService) ReportTSL2591(environment string, channelName string) {
+func (c *ChannelService) ReportTSL2591(l logger.Logger, conf conf.File, channelName string) {
 	sensorValue := 0.0
-	if environment == "development" {
+	if conf.Environment == "development" {
 		sensorValue = MeasureTSL2591Rand()
 	} else {
-		sensorValue = MeasureTSL2591()
+		sensorValue = MeasureTSL2591(l)
 	}
+
+	l.Info("Light = %.2f", sensorValue)
 
 	content := channelContent{
 		Datetime: time.Now().UTC().String(),
@@ -64,12 +67,12 @@ func (c *ChannelService) ReportTSL2591(environment string, channelName string) {
 
 	encodedIdentifier, err := json.Marshal(identifier)
 	if err != nil {
-		log.Panic(err)
+		l.Error("Error sending sensor value to %s channel: %s", channelName, err)
 	}
 
 	encodedData, err := json.Marshal(data)
 	if err != nil {
-		log.Panic(err)
+		l.Error("Error sending sensor value to %s channel: %s", channelName, err)
 	}
 
 	message := ChannelMessage{
@@ -80,7 +83,7 @@ func (c *ChannelService) ReportTSL2591(environment string, channelName string) {
 
 	encodedMessage, err := json.Marshal(message)
 	if err != nil {
-		log.Panic(err)
+		l.Error("Error sending sensor value to %s channel: %s", channelName, err)
 	}
 
 	// TODO: Need to handle message failures.

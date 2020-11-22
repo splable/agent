@@ -3,13 +3,14 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
 	"github.com/d2r2/go-i2c"
-	"github.com/d2r2/go-logger"
+	d2r2Logger "github.com/d2r2/go-logger"
 	"github.com/d2r2/go-sht3x"
+	"github.com/splable/agent/v1/conf"
+	"github.com/splable/agent/v1/logger"
 )
 
 // MeasureSHT3xRand gets the current temperature value from the SHT3x sensor.
@@ -30,24 +31,24 @@ func MeasureSHT3xRand() (float64, float64) {
 }
 
 // MeasureSHT3x gets the current temperature and humidity values from the SHT3x sensor.
-func MeasureSHT3x() (float64, float64) {
+func MeasureSHT3x(l logger.Logger) (float64, float64) {
 	// Create new connection to i2c-bus on 1 line with address 0x44.
 	// Use i2cdetect utility to find device address over the i2c-bus
 	// ls /dev/i2c* to find out bus line.
 	i2c, err := i2c.NewI2C(0x44, 1)
 	if err != nil {
-		log.Fatal(err)
+		l.Error("Error connecting to the SHT3x sensor using the I2C bus: %s", err)
 	}
 	defer i2c.Close()
 
-	logger.ChangePackageLogLevel("i2c", logger.InfoLevel)
-	logger.ChangePackageLogLevel("sht3x", logger.InfoLevel)
+	d2r2Logger.ChangePackageLogLevel("i2c", d2r2Logger.InfoLevel)
+	d2r2Logger.ChangePackageLogLevel("sht3x", d2r2Logger.InfoLevel)
 
 	sensor := sht3x.NewSHT3X()
 
 	temp, rh, err := sensor.ReadTemperatureAndRelativeHumidity(i2c, sht3x.RepeatabilityLow)
 	if err != nil {
-		log.Fatal(err)
+		l.Error("Error reading SHT3x sensor value: %s", err)
 	}
 
 	return float64(temp), float64(rh)
@@ -55,21 +56,23 @@ func MeasureSHT3x() (float64, float64) {
 
 // ReportSHT3x generates sensor values based on environment. In dev, we just use random numbers
 // since access to actual sensors is not available.
-func (c *ChannelService) ReportSHT3x(environment string, tempChannelName string, humidityChannelName string) {
+func (c *ChannelService) ReportSHT3x(l logger.Logger, conf conf.File, tempChannelName string, humidityChannelName string) {
 	tempValue := 0.0
 	humidityValue := 0.0
-	if environment == "development" {
+	if conf.Environment == "development" {
 		tempValue, humidityValue = MeasureSHT3xRand()
 	} else {
-		tempValue, humidityValue = MeasureSHT3x()
+		tempValue, humidityValue = MeasureSHT3x(l)
 	}
 
-	ReportValue(c, tempChannelName, tempValue)
-	ReportValue(c, humidityChannelName, humidityValue)
+	ReportValue(l, c, tempChannelName, tempValue)
+	l.Info("Temperature = %.2f", tempValue)
+	ReportValue(l, c, humidityChannelName, humidityValue)
+	l.Info("Humidity = %.2f", humidityValue)
 }
 
 // ReportValue sends the current temperature and humidity values to websocket channels.
-func ReportValue(c *ChannelService, channelName string, value float64) {
+func ReportValue(l logger.Logger, c *ChannelService, channelName string, value float64) {
 	content := channelContent{
 		Datetime: time.Now().UTC().String(),
 		Message:  fmt.Sprintf("%.2f", value),
@@ -86,12 +89,12 @@ func ReportValue(c *ChannelService, channelName string, value float64) {
 
 	encodedIdentifier, err := json.Marshal(identifier)
 	if err != nil {
-		log.Panic(err)
+		l.Error("Error sending sensor value to %s channel: %s", channelName, err)
 	}
 
 	encodedData, err := json.Marshal(data)
 	if err != nil {
-		log.Panic(err)
+		l.Error("Error sending sensor value to %s channel: %s", channelName, err)
 	}
 
 	message := ChannelMessage{
@@ -102,7 +105,7 @@ func ReportValue(c *ChannelService, channelName string, value float64) {
 
 	encodedMessage, err := json.Marshal(message)
 	if err != nil {
-		log.Panic(err)
+		l.Error("Error sending sensor value to %s channel: %s", channelName, err)
 	}
 
 	// TODO: Need to handle message failures.

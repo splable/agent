@@ -3,6 +3,7 @@ package conf
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -10,7 +11,7 @@ import (
 
 const (
 	// FilePath is the location to configuration file.
-	FilePath = "./splable.yml"
+	FileName = "splable.yml"
 )
 
 // File is used to model our configuration file.
@@ -22,8 +23,7 @@ type File struct {
 
 // GetConf reads a yml file and loads it into struct.
 func (c *File) GetConf() *File {
-	fileName, _ := filepath.Abs(FilePath)
-	yamlFile, err := ioutil.ReadFile(fileName)
+	yamlFile, err := ioutil.ReadFile(filepath.Join(os.Getenv("HOME"), FileName))
 	if err != nil {
 		log.Fatalf("Error reading config file: #%v", err)
 	}
